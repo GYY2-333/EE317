@@ -1,0 +1,17 @@
+/src/Debug
+/src/brainBay.vcxproj.user
+/src/*.sdf
+/src/*.opensdf
+*.ipch
+*.suo
+/src/Release
+/src/.vs/
+/src/*.aps
+/bin/bbay.log
+.codemap/
+.codemaker/codemap/
+.codemaker/codeindex/
+.codemaker/rules/codemap.mdc
+.codemaker/mcps.json
+.claude/skills/codemap-*/
+.claude/skills/code-index-*/
