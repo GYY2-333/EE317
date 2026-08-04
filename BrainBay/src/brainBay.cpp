@@ -62,7 +62,6 @@ extern NEUROBITOBJ * NB_OBJ;
 int check_keys(void)
 {
     static int mode=0;
-git push -u origin feature
 	if (mode)
 	{ if (!GetAsyncKeyState(KEY_F5) && !GetAsyncKeyState(KEY_F6) && !GetAsyncKeyState(KEY_F7) && !GetAsyncKeyState(KEY_F8))
 	    mode=0;   else return(0);
@@ -252,7 +251,19 @@ LRESULT CALLBACK MainWndHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 					deviceobject=NULL;
 					GLOBAL.showdesign=TRUE;
 					ShowWindow(ghWndDesign,TRUE);
-				    SetWindowPos(ghWndDesign,HWND_BOTTOM,0,0,800,400,SWP_DRAWFRAME);
+					// Fill the Design canvas to the (maximized) main window's client
+					// area instead of a fixed 800x400 box, so it stays full-screen.
+					{
+						RECT rcClient;
+						GetClientRect(ghWndMain, &rcClient);
+						int statusH = (GLOBAL.session_length == 0)
+							? GLOBAL.statusWindowMargin
+							: GLOBAL.statusWindowMarginWithPlayer;
+						int designH = rcClient.bottom - statusH;
+						if (designH < 50) designH = 50;
+						SetWindowPos(ghWndDesign, HWND_BOTTOM, 0, 0,
+							rcClient.right, designH, SWP_DRAWFRAME);
+					}
 					SetDlgItemText(ghWndStatusbox,IDC_DESIGN,"Hide Design"); 
 					GLOBAL.hidestatus=FALSE;
 					ShowWindow(ghWndStatusbox,TRUE);

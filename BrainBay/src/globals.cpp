@@ -616,7 +616,7 @@ void register_classes (HINSTANCE hInstance)
 	wcex.hInstance = hInstance;
 	wcex.hIcon = LoadIcon(hInstance, (LPCTSTR)IDI_MYEEG);
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground	= CreateSolidBrush(RGB(45, 45, 48));   // LabVIEW dark canvas
+	wcex.hbrBackground	= CreateSolidBrush(RGB(236, 238, 242));   // LabVIEW light canvas
 	wcex.lpszMenuName	= NULL;
 	wcex.lpszClassName	= "Design_Class";
 	wcex.hIconSm		= LoadIcon(hInstance, (LPCTSTR)IDI_SMALL);

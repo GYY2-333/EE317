@@ -607,7 +607,22 @@ typedef struct DRAWStruct
 	int		 particles;
 	HPEN	 pen_blue,pen_white,pen_red,pen_ltblue;
 	HBRUSH	 brush_blue,brush_white, brush_orange, brush_ltorange, brush_yellow, brush_ltgreen;
-	
+
+	// LabVIEW-style additional GDI resources
+	HPEN	 pen_grid;			// canvas grid dots
+	HPEN	 pen_gridmajor;		// canvas major grid lines
+	HPEN	 pen_wire_shadow;	// dark outline under wires
+	HPEN	 pen_wire_sel;		// selected wire highlight
+	HPEN	 pen_shadow;		// module drop-shadow / dark bevel
+	HPEN	 pen_hilite;		// module light bevel
+	HPEN	 pen_portedge;		// terminal outline
+	HBRUSH	 brush_canvas;		// canvas background fill
+	HBRUSH	 brush_body;		// module body fill
+	HBRUSH	 brush_title;		// module title bar fill
+	HBRUSH	 brush_title2;		// module title bar gradient end
+	HBRUSH	 brush_shadow;		// module drop shadow fill
+	HFONT	 titleFont;			// bold title font
+
 	HFONT	 scaleFont;
 	HFONT    mediumFont;
 	long	 scaleFontHeight;

@@ -1919,6 +1919,11 @@ Copies the current scroll box tracking position to the nTrackPos member of the S
 			}
 			break;
 
+		case WM_ERASEBKGND:
+			// The canvas (grid + modules) is fully repainted in WM_PAINT using
+			// a double buffer, so suppress the default erase to avoid flicker.
+			return 1;
+
 		case WM_PAINT:
 			if (!GLOBAL.loading)  draw_objects(hWnd);
             
