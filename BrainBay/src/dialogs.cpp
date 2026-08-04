@@ -2005,7 +2005,7 @@ void report(char * Message)
 	write_logfile(Message);
     MessageBox(ghWndMain, Message, "BrainBay - Info", MB_OK|MB_SYSTEMMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_ICONINFORMATION);
     UpdateWindow(ghWndMain);
-    ShowWindow(ghWndMain,TRUE);
+    ShowWindow(ghWndMain,SW_SHOWMAXIMIZED);
     UpdateWindow(ghWndMain);
 }
 
@@ -2017,7 +2017,7 @@ void report_error(char * Message)
 	UpdateWindow(ghWndMain);
     MessageBox(ghWndMain, Message, "BrainBay - Problem", MB_OK|MB_SYSTEMMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_ICONWARNING);
 	UpdateWindow(ghWndMain);
-    ShowWindow(ghWndMain,TRUE);
+    ShowWindow(ghWndMain,SW_SHOWMAXIMIZED);
     UpdateWindow(ghWndMain);
    //InvalidateRect(ghWndMain,NULL,TRUE);
 }

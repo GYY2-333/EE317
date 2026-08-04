@@ -509,10 +509,9 @@ BOOL load_configfile(LPCTSTR pszFileName)
 		deviceobject=NULL;
 		GLOBAL.run_exception=0;
 		GLOBAL.minimized=FALSE;
-		if (GLOBAL.main_maximized)
-		{  SendMessage(ghWndMain,WM_SIZE,SIZE_RESTORED,0);		 
-		   ShowWindow( ghWndMain, TRUE ); UpdateWindow( ghWndMain );
-		}
+		// Keep the main window maximized (full-screen) across config loads.
+		// (Previously the window was restored here and later moved to the
+		//  config's saved windowed rectangle, which cancelled full-screen.)
 
 
 	     load_next_config_buffer(hFile);
@@ -665,9 +664,10 @@ BOOL load_configfile(LPCTSTR pszFileName)
 		 }
 
 
-		 MoveWindow(ghWndMain,GLOBAL.left,GLOBAL.top,GLOBAL.right-GLOBAL.left,GLOBAL.bottom-GLOBAL.top,TRUE);
-		 ShowWindow( ghWndMain, TRUE ); 
-		 UpdateWindow( ghWndMain ); 
+		 // Always keep the main window maximized to fill the screen,
+		 // ignoring the (possibly windowed) geometry stored in the config.
+		 ShowWindow( ghWndMain, SW_SHOWMAXIMIZED );
+		 UpdateWindow( ghWndMain );
 		 // SetWindowPos(ghWndMain,0,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 		 InvalidateRect(ghWndMain,NULL,TRUE);
  		 InvalidateRect(ghWndDesign,NULL,TRUE);

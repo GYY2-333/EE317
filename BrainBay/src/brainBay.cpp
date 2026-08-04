@@ -62,7 +62,7 @@ extern NEUROBITOBJ * NB_OBJ;
 int check_keys(void)
 {
     static int mode=0;
-
+git push -u origin feature
 	if (mode)
 	{ if (!GetAsyncKeyState(KEY_F5) && !GetAsyncKeyState(KEY_F6) && !GetAsyncKeyState(KEY_F7) && !GetAsyncKeyState(KEY_F8))
 	    mode=0;   else return(0);
