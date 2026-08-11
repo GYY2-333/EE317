@@ -572,6 +572,9 @@ LRESULT CALLBACK MainWndHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 				case IDM_INSERT_EEG_NIA: 
 					if (!count_objects(OB_EEG)) { TTY.devicetype=DEV_NIA; create_object(OB_EEG);}  
 					break;
+				case IDM_INSERT_EEG_PHYSIOAMP: 
+					if (!count_objects(OB_EEG)) { TTY.devicetype=DEV_PHYSIOAMP; create_object(OB_EEG);}  
+					break;
 				case IDM_INSERT_EEG_P21: 
 					if (!count_objects(OB_EEG))  { TTY.devicetype=DEV_MONOLITHEEG_P21; create_object(OB_EEG);} 
 					break;

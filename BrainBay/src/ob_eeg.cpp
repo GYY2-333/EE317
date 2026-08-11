@@ -71,6 +71,7 @@
 #include "windows.h"
 #include "brainBay.h"
 #include "ob_eeg.h"
+#include "hid_physioamp.h"
 
 
 #define MAXLEN_TEMPSTR  20
@@ -97,9 +98,9 @@
 #define VINFO_PROTOCOL_SUBNUMBER 9 	// view sub-version of protocol 21 (read only)
 
 
-  char devicetypes[][40]   = {"ModularEEG P2","ModularEEG P3","1 Channel Raw Data","MonolithEEG P21","SmartBrainGames 4Chn","1Chn of 8bit values", "Pendant EEG v3", "QDS NFB 256", "NIA USB HDI Ver 1.4","IBVA 4-chn","SBT 2 Channel BT", "OpenBCI 8 Channels", "OPI TrueSense Exploration Kit", "OpenBCI 16 Channels", "Neurosky MindWave","\0"};
-  int  AMOUNT_TO_READ   []  = {     68,               66,               8           ,  21 ,            25   ,                  4   ,                  25,              40         ,    6 ,                  16 ,             24           ,         66       ,        152                    ,          114            ,      48      };
-  int  BYTES_PER_PACKET []  = {     17,               11,               2           ,  7  ,             5   ,                  1   ,                  5,               20         ,    6 ,                  16 ,             6            ,         33       ,        1                      ,          57             ,      8       };
+  char devicetypes[][40]   = {"ModularEEG P2","ModularEEG P3","1 Channel Raw Data","MonolithEEG P21","SmartBrainGames 4Chn","1Chn of 8bit values", "Pendant EEG v3", "QDS NFB 256", "NIA USB HDI Ver 1.4","IBVA 4-chn","SBT 2 Channel BT", "OpenBCI 8 Channels", "OPI TrueSense Exploration Kit", "OpenBCI 16 Channels", "Neurosky MindWave","PhysioAmp GP-8 HID","\0"};
+  int  AMOUNT_TO_READ   []  = {     68,               66,               8           ,  21 ,            25   ,                  4   ,                  25,              40         ,    6 ,                  16 ,             24           ,         66       ,        152                    ,          114            ,      48      ,      8       };
+  int  BYTES_PER_PACKET []  = {     17,               11,               2           ,  7  ,             5   ,                  1   ,                  5,               20         ,    6 ,                  16 ,             6            ,         33       ,        1                      ,          57             ,      8       ,      2       };
 
 
 
@@ -1319,6 +1320,18 @@ openbci:	// common section for OpenBCI devices
 			st->resolution=16;
 			numChannels=1;
 			break;
+
+		case DEV_PHYSIOAMP:
+			// PhysioAmp GP-8 (USB HID), signal mode: single channel,
+			// 12-bit ADC values (raw10 << 4, range 0..4092), 3000 samples/sec.
+			st->resolution=12;
+			numChannels=1;
+			update_samplingrate(PA_SAMPLINGRATE);
+			st->out_ports[0].get_range=-1;
+			st->out_ports[0].out_min=-500.0f;
+			st->out_ports[0].out_max=500.0f;
+			strcpy(st->out_ports[0].out_dim,"uV");
+			break;
 	}
 	st->outports=numChannels;
 	st->height=CON_START+st->outports*CON_HEIGHT+5;
@@ -1427,6 +1440,9 @@ LRESULT CALLBACK EEGDlgHandler( HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 							if (TTY.devicetype == DEV_NIA){		
 								DisconnectNIA(); 
 								TTY.CONNECTED=FALSE;			
+							} else if (TTY.devicetype == DEV_PHYSIOAMP){
+								DisconnectPhysioAmp();
+								TTY.CONNECTED=FALSE;
 							} else {
 								BreakDownCommPort();
 							}
@@ -1437,6 +1453,11 @@ LRESULT CALLBACK EEGDlgHandler( HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 									DisconnectNIA();								
 								if ((TTY.CONNECTED = ConnectNIA(hDlg)) == FALSE) {
 									report_error("No NIA found!");
+									break;
+								}
+							} else if (TTY.devicetype == DEV_PHYSIOAMP){
+								if ((TTY.CONNECTED = ConnectPhysioAmp(hDlg)) == FALSE) {
+									report_error("No PhysioAmp GP-8 found!");
 									break;
 								}
 							} else {
@@ -1667,6 +1688,9 @@ EEGOBJ::EEGOBJ(int num) : BASE_CL()
 			  case DEV_NIA:
 		  	  	display_toolbox(hDlg=CreateDialog(hInst, (LPCTSTR)IDD_EEGBOX_NIA, ghWndStatusbox, (DLGPROC)EEGDlgHandler));
 				break;
+			  case DEV_PHYSIOAMP:
+		  	  	display_toolbox(hDlg=CreateDialog(hInst, (LPCTSTR)IDD_EEGBOX_NIA, ghWndStatusbox, (DLGPROC)EEGDlgHandler));
+				break;
 			  case DEV_SBT2:
 		  	  	display_toolbox(hDlg=CreateDialog(hInst, (LPCTSTR)IDD_EEGBOX_SBT2, ghWndStatusbox, (DLGPROC)EEGDlgHandler));
 				break;
@@ -1701,6 +1725,9 @@ EEGOBJ::EEGOBJ(int num) : BASE_CL()
 				break;
 				case DEV_NIA: 
 					desired_outports=2;
+					break;
+				case DEV_PHYSIOAMP:
+					desired_outports=1;
 					break;
 				case DEV_SBT2: 
 					desired_outports=2;
@@ -1820,6 +1847,7 @@ openbci:	{
 EEGOBJ::~EEGOBJ()
 	  {
 		if (TTY.devicetype==DEV_NIA) DisconnectNIA();
+		if (TTY.devicetype==DEV_PHYSIOAMP) DisconnectPhysioAmp();
 	    close_captfile();
 	  }  
 

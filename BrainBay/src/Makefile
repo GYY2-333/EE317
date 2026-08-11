@@ -7,7 +7,7 @@ OBJECTS = brainBayRes.o $(patsubst %.cpp,%.o,$(wildcard *.cpp))
 Debug/brainBay.exe: $(OBJECTS)
 	g++ -o Debug/brainBay -mwindows -LDebug --enable-auto-import -L. -Llibmingw *.o -lSDL -lSDL_sound -lSDL_net \
 	-lopengl32 -lglu32 -lwinmm -lcomctl32 -lvfw_avi32 -lvfw_ms32 -lfidlib \
-	-lcv -lcvcam -lcxcore -lhighgui -lole32 -lolepro32 -luuid
+	-lcv -lcvcam -lcxcore -lhighgui -lole32 -lolepro32 -luuid -lsetupapi -lhid
 
 brainBayRes.o: brainBay.rc
 	windres -i brainBay.rc -o brainBayRes.o

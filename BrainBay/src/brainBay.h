@@ -240,6 +240,7 @@ extern "C" {
 #define DEV_OPI_EXPLORATION 12
 #define DEV_OPENBCI16 13
 #define DEV_NEUROSKY 14
+#define DEV_PHYSIOAMP 15
 
 
 #define MAX_TEMPSTRING    512
@@ -694,6 +695,10 @@ DWORD  WINAPI WriterProc( LPVOID );
 BOOL	ConnectNIA(HWND);
 BOOL	DisconnectNIA(void);
 int     ReadNIA(UINT, LONG );
+
+//  PhysioAmp GP-8 USB HID functions (see hid_physioamp.cpp)
+BOOL	ConnectPhysioAmp(HWND);
+BOOL	DisconnectPhysioAmp(void);
 
 //  Object Arrangement - functions
 

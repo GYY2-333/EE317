@@ -1012,6 +1012,7 @@
 #define IDM_INSERT_BLERECEIVER          32976
 #define IDM_INSERTBLERECEIVER           32977
 #define ID_SOURCE_GENERIC32978          32978
+#define IDM_INSERT_EEG_PHYSIOAMP        32979
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -1019,7 +1020,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        273
-#define _APS_NEXT_COMMAND_VALUE         32979
+#define _APS_NEXT_COMMAND_VALUE         32980
 #define _APS_NEXT_CONTROL_VALUE         1568
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
