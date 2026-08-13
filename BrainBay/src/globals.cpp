@@ -98,6 +98,7 @@
 #include "ob_osc_sender.h"
 #include "ob_biosemi.h"
 #include "ob_brainflow.h"
+#include "ob_medscope.h"
 
 //
 // GLOBAL VARIABLES
@@ -194,6 +195,8 @@ void create_object(int type)
 					 		 actobject->object_size=sizeof(GENERIC_UDP_RECEIVEROBJ); break;
 		case OB_GENERIC_BLE_RECEIVER: actobject = new GENERIC_BLE_RECEIVEROBJ(GLOBAL.objects);
 							 actobject->object_size = sizeof(GENERIC_BLE_RECEIVEROBJ); break;
+		case OB_MEDSCOPE:    actobject=new MEDSCOPEOBJ(GLOBAL.objects);
+							 actobject->object_size=sizeof(MEDSCOPEOBJ);break;
 		case OB_LSL_RECEIVER:actobject=new LSL_RECEIVEOBJ(GLOBAL.objects);             // KDS  240829
 							 actobject->object_size=sizeof(LSL_RECEIVEOBJ);break;							 
 		case OB_DOKU:        actobject=new DOKUOBJ(GLOBAL.objects); 
@@ -502,6 +505,20 @@ void register_classes (HINSTANCE hInstance)
 	wcex.lpfnWndProc = (WNDPROC)FFTWndHandler;
     wcex.lpszClassName    = "FFTClass";
     if (!RegisterClassEx(&wcex))  report_error("Can't register FFTWindowclass");
+
+	wcex.cbSize = sizeof(WNDCLASSEX);
+	wcex.style = 0;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hIcon = LoadIcon(hInstance, (LPCTSTR)IDI_MYEEG);
+	wcex.hIconSm          = LoadIcon(hInstance, (LPCTSTR)IDI_SMALL);
+	wcex.hCursor          = LoadCursor(NULL, IDC_ARROW);
+	wcex.hInstance        = hInstance;
+	wcex.hbrBackground    = (HBRUSH) (COLOR_WINDOW + 1);
+	wcex.lpszMenuName     = NULL;
+	wcex.lpfnWndProc = (WNDPROC)MedScopeWndHandler;
+	wcex.lpszClassName    = "MedScopeClass";
+	if (!RegisterClassEx(&wcex))  report_error("Can't register MedScopeWindowclass");
 
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = 0;//CS_HREDRAW | CS_VREDRAW;
@@ -915,6 +932,12 @@ void GlobalCleanup()
 	DeleteObject(DRAW.brush_blue);
 	DeleteObject(DRAW.pen_blue);
 	DeleteObject(DRAW.pen_white);
+
+	// dark-mode dialog brushes
+	if (DRAW.brush_dlg_bg)   DeleteObject(DRAW.brush_dlg_bg);
+	if (DRAW.brush_dlg_edit) DeleteObject(DRAW.brush_dlg_edit);
+	if (DRAW.brush_dlg_btn)  DeleteObject(DRAW.brush_dlg_btn);
+
 	write_logfile("BrainBay normal shutdown.");
 
     return;

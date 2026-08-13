@@ -76,6 +76,11 @@ void init_draw(void)
 	DRAW.brush_title2   = CreateSolidBrush(PALETTERGB( 33,  78, 132));       // title strip (dark)
 	DRAW.brush_shadow   = CreateSolidBrush(PALETTERGB(200, 202, 208));       // module shadow
 
+	// Dark-mode dialog brushes (modern dark palette, matches SessionManager)
+	DRAW.brush_dlg_bg   = CreateSolidBrush(RGB( 28,  28,  30));   // dialog background
+	DRAW.brush_dlg_edit = CreateSolidBrush(RGB( 44,  44,  48));   // edit / listbox
+	DRAW.brush_dlg_btn  = CreateSolidBrush(RGB( 55,  55,  60));   // button
+
 	DRAW.particles=0;
 
 

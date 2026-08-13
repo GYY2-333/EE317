@@ -284,6 +284,9 @@
     </ClCompile>
     <ClCompile Include="NIA.cpp" />
     <ClCompile Include="hid_physioamp.cpp" />
+    <ClCompile Include="gl_modern.cpp" />
+    <ClCompile Include="ob_medscope.cpp" />
+    <ClCompile Include="darkmode.cpp" />
     <ClCompile Include="ob_and.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug (Platform Toolset v100)|Win32'">Disabled</Optimization>
@@ -811,6 +814,9 @@
     <ClInclude Include="cv.h" />
     <ClInclude Include="fidlib.h" />
     <ClInclude Include="hid_physioamp.h" />
+    <ClInclude Include="gl_modern.h" />
+    <ClInclude Include="ob_medscope.h" />
+    <ClInclude Include="darkmode.h" />
     <ClInclude Include="highgui.h" />
     <ClInclude Include="matheval.h" />
     <ClInclude Include="ob_and.h" />

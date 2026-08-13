@@ -146,6 +146,7 @@ extern "C" {
 #define OB_LSL_RECEIVER 71
 #define OB_GENERIC_UDP_RECEIVER 72
 #define OB_GENERIC_BLE_RECEIVER 73
+#define OB_MEDSCOPE     74
 
 #define OBJECT_COUNT 	74
 
@@ -623,6 +624,11 @@ typedef struct DRAWStruct
 	HBRUSH	 brush_title2;		// module title bar gradient end
 	HBRUSH	 brush_shadow;		// module drop shadow fill
 	HFONT	 titleFont;			// bold title font
+
+	// Dark-mode dialog resources (process-wide, created once in init_draw)
+	HBRUSH	 brush_dlg_bg;		// dialog / static background (dark)
+	HBRUSH	 brush_dlg_edit;	// edit / listbox background (slightly lighter)
+	HBRUSH	 brush_dlg_btn;		// button background (dark)
 
 	HFONT	 scaleFont;
 	HFONT    mediumFont;

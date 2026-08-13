@@ -13,6 +13,7 @@
          
  --------------------------------------------------------------------------------------*/
 #include "brainBay.h"
+#include "darkmode.h"
 
 
 COLORREF select_color(HWND hwnd, COLORREF initial)
@@ -54,6 +55,7 @@ void display_toolbox(HWND hDlg)
 	if (hDlg!=NULL)
 	{
 		ghWndToolbox=hDlg;
+		InstallDarkSubclass(hDlg);      // apply the global dark dialog theme
 		ShowWindow(ghWndToolbox,FALSE);
 
 		GetWindowPlacement(hDlg, &wndpl);
@@ -136,6 +138,7 @@ LRESULT CALLBACK AboutDlgHandler( HWND hDlg, UINT message, WPARAM wParam, LPARAM
 	switch( message )
 	{
 		case WM_INITDIALOG:
+				InstallDarkSubclass(hDlg);
 				return TRUE;
 
 		case WM_COMMAND:
@@ -634,6 +637,7 @@ LRESULT CALLBACK SETTINGSDlgHandler( HWND hDlg, UINT message, WPARAM wParam, LPA
 	{
 		case WM_INITDIALOG:
 			{
+				InstallDarkSubclass(hDlg);
 				SetDlgItemInt(hDlg, IDC_SAMPLINGRATE, PACKETSPERSECOND,0);
 
 				for (t = 0; t < GLOBAL.midiports; t++) 
@@ -1241,6 +1245,7 @@ LRESULT CALLBACK StatusDlgHandler( HWND hDlg, UINT message, WPARAM wParam, LPARA
 	switch( message )
 	{
 		case WM_INITDIALOG:
+				InstallDarkSubclass(hDlg);
 				GetWindowPlacement(ghWndMain, &wndpl);
 				SetWindowPos(hDlg, HWND_BOTTOM, wndpl.rcNormalPosition.left+4, wndpl.rcNormalPosition.bottom-40, 
 				wndpl.rcNormalPosition.right-wndpl.rcNormalPosition.left-8,35, SWP_NOACTIVATE|SWP_NOZORDER);

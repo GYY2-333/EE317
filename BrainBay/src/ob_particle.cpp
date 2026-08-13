@@ -26,8 +26,94 @@
 
 #include "brainBay.h"
 #include "ob_particle.h"
+#include "gl_modern.h"
 
 extern GLuint	texture[1];					// Storage For Our Particle Texture
+
+// ---------------------------------------------------------------------------
+//  Modern (GLSL) particle renderer
+//
+//  The legacy fixed-function renderer (DrawGLParticles_Legacy) is kept as a
+//  fallback. When modern GL is available we render the particles as instanced,
+//  camera-facing soft quads with additive glow, so we can push many more
+//  particles and get a much softer, "energy-flow" look that reacts to the
+//  incoming biosignal (colour / size / brightness follow particle life).
+// ---------------------------------------------------------------------------
+
+// per-instance data uploaded every frame:  vec3 pos, float size, vec4 rgba
+struct PA_Instance { float x, y, z, size, r, g, b, a; };
+
+static GLuint  s_paProg      = 0;      // shader program
+static GLuint  s_paVAO       = 0;
+static GLuint  s_paQuadVBO   = 0;      // static unit quad (4 verts)
+static GLuint  s_paInstVBO   = 0;      // per-instance buffer
+static int     s_paInited    = 0;      // 0=untried, 1=ok, -1=failed
+static PA_Instance *s_paInst = NULL;   // CPU staging buffer
+static int     s_paInstCap   = 0;
+
+static const char *PA_VS =
+	"#version 120\n"
+	"attribute vec2 aCorner;\n"     // unit quad corner [-0.5..0.5]
+	"attribute vec3 aPos;\n"        // instance world pos
+	"attribute float aSize;\n"
+	"attribute vec4 aColor;\n"
+	"uniform mat4 uProj;\n"
+	"uniform mat4 uView;\n"
+	"varying vec2 vUV;\n"
+	"varying vec4 vColor;\n"
+	"void main(){\n"
+	"  vec4 eye = uView * vec4(aPos,1.0);\n"
+	"  eye.xy += aCorner * aSize;\n"   // billboard in eye space
+	"  gl_Position = uProj * eye;\n"
+	"  vUV = aCorner + vec2(0.5);\n"
+	"  vColor = aColor;\n"
+	"}\n";
+
+static const char *PA_FS =
+	"#version 120\n"
+	"varying vec2 vUV;\n"
+	"varying vec4 vColor;\n"
+	"void main(){\n"
+	"  vec2 d = vUV - vec2(0.5);\n"
+	"  float r = length(d) * 2.0;\n"
+	"  float core = smoothstep(1.0, 0.0, r);\n"      // soft round falloff
+	"  float glow = pow(core, 2.5);\n"               // brighter centre
+	"  float a = vColor.a * glow;\n"
+	"  gl_FragColor = vec4(vColor.rgb * (0.4 + 0.6*glow), a);\n"
+	"}\n";
+
+static void pa_init_modern(void)
+{
+	if (s_paInited != 0) return;
+	if (!ensureGladLoaded()) { s_paInited = -1; return; }
+
+	// instancing + VAO are required for the modern path
+	if (!glm_DrawArraysInstanced || !glm_VertexAttribDivisor ||
+	    !glm_GenVertexArrays || !glm_BindVertexArray)
+	{ s_paInited = -1; return; }
+
+	s_paProg = glmBuildProgram(PA_VS, PA_FS);
+	if (!s_paProg) { s_paInited = -1; return; }
+
+	static const float quad[8] = {
+		-0.5f,-0.5f,  0.5f,-0.5f,  -0.5f,0.5f,  0.5f,0.5f
+	};
+
+	if (glm_GenVertexArrays) { glm_GenVertexArrays(1,&s_paVAO); glm_BindVertexArray(s_paVAO); }
+	glm_GenBuffers(1,&s_paQuadVBO);
+	glm_BindBuffer(GL_ARRAY_BUFFER, s_paQuadVBO);
+	glm_BufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+
+	glm_GenBuffers(1,&s_paInstVBO);
+
+	s_paInited = 1;
+}
+
+// render all particles of all particle-objects using the modern pipeline.
+// returns TRUE if it handled the drawing, FALSE to fall back to legacy.
+static int DrawGLParticles_Modern(void);
+int DrawGLParticles_Legacy(GLvoid);
+
 struct PARTICLEPARAMETERStruct PARTICLEPARAMETER[PARTICLE_PARAMS]=
 { 
 {"Number of Particles",1.0f,500.0f },
@@ -113,6 +199,14 @@ int create_AnimationWindow(void)
 
 int DrawGLParticles(GLvoid)										// Here's Where We Do All The Drawing
 {
+	// try the modern renderer first; it also advances the particle physics.
+	if (DrawGLParticles_Modern()) return TRUE;
+	// otherwise fall back to the legacy fixed-function renderer below.
+	return DrawGLParticles_Legacy();
+}
+
+int DrawGLParticles_Legacy(GLvoid)								// Fixed-function fallback
+{
 	float min;
 	int s;
 	unsigned int loop,particles;
@@ -166,6 +260,136 @@ int DrawGLParticles(GLvoid)										// Here's Where We Do All The Drawing
 	  }
     }
 	return TRUE;											// Everything Went OK
+}
+
+
+// ---------------------------------------------------------------------------
+//  Modern instanced soft-particle renderer.
+//  Advances particle physics identically to the legacy path, collects the
+//  live particles into an instance buffer and draws them as additive glowing
+//  billboards. Colour/size/brightness follow particle life so the animation
+//  visibly reacts to the biosignal that drives the particle stream.
+// ---------------------------------------------------------------------------
+static int DrawGLParticles_Modern(void)
+{
+	pa_init_modern();
+	if (s_paInited != 1) return FALSE;
+
+	// --- 1) count max particles to size the staging buffer -----------------
+	int total = 0;
+	for (int s=0; s<GLOBAL.objects; s++)
+		if (objects[s]->type==OB_PARTICLE)
+		{
+			PARTICLEOBJ *st=(PARTICLEOBJ*)objects[s];
+			int p=(int)st->get_paramvalue(0);
+			if (p>0 && p<=MAX_PARTICLES) total+=p;
+		}
+	if (total<=0)
+	{
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		return TRUE;
+	}
+	if (total > s_paInstCap)
+	{
+		free(s_paInst);
+		s_paInst=(PA_Instance*)malloc(sizeof(PA_Instance)*total);
+		s_paInstCap = s_paInst ? total : 0;
+		if (!s_paInst) return FALSE;
+	}
+
+	// --- 2) advance physics + fill instance data ---------------------------
+	int n=0;
+	for (int s=0; s<GLOBAL.objects; s++)
+	{
+		if (objects[s]->type!=OB_PARTICLE) continue;
+		PARTICLEOBJ *st=(PARTICLEOBJ*)objects[s];
+		float minlife=1000.0f;
+		unsigned int particlecount=(unsigned int)st->get_paramvalue(0);
+		if (particlecount>MAX_PARTICLES) particlecount=0;
+		float slowdown=st->get_paramvalue(2);
+		if (slowdown<1.0f) slowdown=1.0f;
+
+		for (unsigned int loop=0; loop<particlecount; loop++)
+		{
+			particles &pt=st->particle[loop];
+			if (!pt.active) continue;
+
+			if (n<s_paInstCap)
+			{
+				PA_Instance &ins=s_paInst[n++];
+				ins.x=pt.x; ins.y=pt.y; ins.z=pt.z;
+				// size grows a little for younger (brighter) particles -> energy look
+				float life = pt.life; if (life<0) life=0;
+				ins.size = 0.6f + 0.7f*life;
+				ins.r=pt.r; ins.g=pt.g; ins.b=pt.b;
+				ins.a=(life>1.0f)?1.0f:life;
+			}
+
+			// identical physics to the legacy renderer
+			pt.x+=pt.xi/slowdown;
+			pt.y+=pt.yi/slowdown;
+			pt.z+=pt.zi/slowdown;
+			pt.xi+=pt.xg; pt.yi+=pt.yg; pt.zi+=pt.zg;
+			if (pt.life>0.0f) pt.life-=FADING;
+			if (pt.life<minlife){ minlife=pt.life; st->oldest_particle=loop; }
+		}
+	}
+
+	// --- 3) draw ------------------------------------------------------------
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_TEXTURE_2D);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);   // additive glow
+
+	// projection/view matching the legacy gluPerspective(45, aspect, .1,200)
+	RECT rc; GetClientRect(ghWndAnimation,&rc);
+	float aspect = (rc.bottom>0)?(float)(rc.right)/(float)(rc.bottom):1.0f;
+	glmMat4 proj = glmPerspective(45.0f, aspect, 0.1f, 200.0f);
+	glmMat4 view = glmIdentity();        // particles already carry world Z (negative)
+
+	glm_UseProgram(s_paProg);
+	GLint uProj=glm_GetUniformLocation(s_paProg,"uProj");
+	GLint uView=glm_GetUniformLocation(s_paProg,"uView");
+	if (uProj>=0) glm_UniformMatrix4fv(uProj,1,GL_FALSE,proj.m);
+	if (uView>=0) glm_UniformMatrix4fv(uView,1,GL_FALSE,view.m);
+
+	if (s_paVAO && glm_BindVertexArray) glm_BindVertexArray(s_paVAO);
+
+	GLint aCorner=glm_GetAttribLocation(s_paProg,"aCorner");
+	GLint aPos   =glm_GetAttribLocation(s_paProg,"aPos");
+	GLint aSize  =glm_GetAttribLocation(s_paProg,"aSize");
+	GLint aColor =glm_GetAttribLocation(s_paProg,"aColor");
+
+	// static quad
+	glm_BindBuffer(GL_ARRAY_BUFFER, s_paQuadVBO);
+	if (aCorner>=0){ glm_EnableVertexAttribArray(aCorner);
+		glm_VertexAttribPointer(aCorner,2,GL_FLOAT,GL_FALSE,0,(void*)0);
+		if (glm_VertexAttribDivisor) glm_VertexAttribDivisor(aCorner,0); }
+
+	// per-instance data
+	glm_BindBuffer(GL_ARRAY_BUFFER, s_paInstVBO);
+	glm_BufferData(GL_ARRAY_BUFFER, sizeof(PA_Instance)*n, s_paInst, GL_STREAM_DRAW);
+	if (aPos>=0){ glm_EnableVertexAttribArray(aPos);
+		glm_VertexAttribPointer(aPos,3,GL_FLOAT,GL_FALSE,sizeof(PA_Instance),(void*)0);
+		if (glm_VertexAttribDivisor) glm_VertexAttribDivisor(aPos,1); }
+	if (aSize>=0){ glm_EnableVertexAttribArray(aSize);
+		glm_VertexAttribPointer(aSize,1,GL_FLOAT,GL_FALSE,sizeof(PA_Instance),(void*)(sizeof(float)*3));
+		if (glm_VertexAttribDivisor) glm_VertexAttribDivisor(aSize,1); }
+	if (aColor>=0){ glm_EnableVertexAttribArray(aColor);
+		glm_VertexAttribPointer(aColor,4,GL_FLOAT,GL_FALSE,sizeof(PA_Instance),(void*)(sizeof(float)*4));
+		if (glm_VertexAttribDivisor) glm_VertexAttribDivisor(aColor,1); }
+
+	if (glm_DrawArraysInstanced)
+		glm_DrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, n);
+
+	if (aCorner>=0) glm_DisableVertexAttribArray(aCorner);
+	if (aPos>=0)    glm_DisableVertexAttribArray(aPos);
+	if (aSize>=0)   glm_DisableVertexAttribArray(aSize);
+	if (aColor>=0)  glm_DisableVertexAttribArray(aColor);
+
+	if (glm_BindVertexArray) glm_BindVertexArray(0);
+	glm_UseProgram(0);
+	return TRUE;
 }
 
 

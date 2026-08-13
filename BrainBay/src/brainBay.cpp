@@ -51,6 +51,7 @@
 #include "ob_sessionmanager.h"
 #include "ob_threshold.h"
 #include "ob_skindialog.h"
+#include "darkmode.h"
 #include "ob_neurobit.h"
 
 LRESULT CALLBACK AboutDlgHandler( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );
@@ -162,6 +163,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
     ShowWindow( ghWndMain, SW_SHOWMAXIMIZED );
     UpdateWindow( ghWndMain );
+	EnableDarkTitleBar( ghWndMain );
 	ShowWindow( ghWndDesign, TRUE ); 
 	UpdateWindow( ghWndDesign ); 
 	ghWndStatusbox=CreateDialog(hInst, (LPCTSTR)IDD_STATUSBOX, ghWndMain, (DLGPROC)StatusDlgHandler); 
@@ -425,6 +427,8 @@ LRESULT CALLBACK MainWndHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 				case IDM_INSERTPARTICLE:create_object(OB_PARTICLE);						
 					break;	
 				case IDM_INSERTOSCI:create_object(OB_OSCI);						
+					break;	
+				case IDM_INSERTMEDSCOPE:create_object(OB_MEDSCOPE);
 					break;	
 				case IDM_INSERTTRANSLATE:create_object(OB_TRANSLATE);						
 					break;

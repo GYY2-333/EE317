@@ -1013,14 +1013,23 @@
 #define IDM_INSERTBLERECEIVER           32977
 #define ID_SOURCE_GENERIC32978          32978
 #define IDM_INSERT_EEG_PHYSIOAMP        32979
+#define IDM_INSERTMEDSCOPE              32980
+#define IDD_MEDSCOPEBOX                 273
+#define IDC_MED_CHANNELS                1400
+#define IDC_MED_GLOW                    1401
+#define IDC_MED_GAIN                    1402
+#define IDC_MED_TIMEBASE                1403
+#define IDC_MED_SWEEP                   1404
+#define IDC_MED_CHNLABEL                1405
+#define IDC_MED_GLOWLABEL               1406
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        273
-#define _APS_NEXT_COMMAND_VALUE         32980
+#define _APS_NEXT_RESOURCE_VALUE        274
+#define _APS_NEXT_COMMAND_VALUE         32981
 #define _APS_NEXT_CONTROL_VALUE         1568
 #define _APS_NEXT_SYMED_VALUE           110
 #endif

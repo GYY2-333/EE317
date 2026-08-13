@@ -140,6 +140,7 @@ BEGIN
             MENUITEM "FFT (Spectrum-Analyser)",     IDM_INSERTSPECTRUM
             MENUITEM "File-Writer",                 IDM_INSERTFILE_WRITER
             MENUITEM "Oscilloscope",                IDM_INSERTOSCI
+            MENUITEM "Medical Signal Scope",        IDM_INSERTMEDSCOPE
             MENUITEM "OSC-Sender",                  IDM_INSERTOSCSENDER
             MENUITEM "Keystrike",                   IDM_INSERTKEYSTRIKE
             MENUITEM "Parallel Port",               IDM_INSERTPORT_IO
@@ -2897,6 +2898,25 @@ BEGIN
     PUSHBUTTON      "",IDC_BKCOLOR,119,48,41,17,BS_FLAT,WS_EX_STATICEDGE
     PUSHBUTTON      "Edit Window Position",IDC_EDIT_WINDOW,40,17,92,14,BS_FLAT
     PUSHBUTTON      "Lock Window Position",IDC_LOCK_WINDOW,144,17,92,14,BS_FLAT
+END
+
+IDD_MEDSCOPEBOX DIALOGEX 0, 0, 285, 120
+STYLE DS_ABSALIGN | DS_SYSMODAL | DS_SETFONT | DS_SETFOREGROUND | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_TOOLWINDOW | WS_EX_STATICEDGE
+CAPTION "Medical Signal Scope"
+    FONT 9, "Segoe UI", 0, 0, 0x1
+BEGIN
+    LTEXT           "Channels:",-1,18,16,40,8
+    SCROLLBAR       IDC_MED_CHANNELS,66,15,140,11,SBS_HORZ
+    LTEXT           "1",IDC_MED_CHNLABEL,214,16,20,8
+    LTEXT           "Glow:",-1,18,36,40,8
+    SCROLLBAR       IDC_MED_GLOW,66,35,140,11,SBS_HORZ
+    LTEXT           "60",IDC_MED_GLOWLABEL,214,36,20,8
+    LTEXT           "Gain:",-1,18,58,40,8
+    EDITTEXT        IDC_MED_GAIN,66,56,50,12,ES_AUTOHSCROLL
+    LTEXT           "Timebase (s):",-1,130,58,45,8
+    EDITTEXT        IDC_MED_TIMEBASE,180,56,50,12,ES_AUTOHSCROLL
+    AUTOCHECKBOX    "Sweep mode",IDC_MED_SWEEP,66,78,90,10
 END
 
 

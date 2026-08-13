@@ -25,6 +25,7 @@
 
 #include "brainBay.h"
 #include "ob_mouse.h"
+#include "darkmode.h"
 //#include <winuser.h>
 
 MOUSEOBJ * mo;
@@ -145,6 +146,7 @@ LRESULT CALLBACK ClickselectDlgHandler( HWND hDlg, UINT message, WPARAM wParam, 
 	{
 		case WM_INITDIALOG:
 			{
+				InstallDarkSubclass(hDlg);
 				SetDlgItemText(hDlg, IDC_NEXTCLICK,"");
 			}
 			return TRUE;
